@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.reflect.Method;
 
 public class Xades {
 
@@ -29,16 +28,25 @@ public class Xades {
     // En Java >=6 el wildcard en classpath funciona: dir/* incluye todos los jars
     String cp = jar + File.pathSeparator + parent + "/lib/*";
 
-    // 4) Invocar directamente el main de FirmaElectronica en esta JVM
-    Class<?> cli = Class.forName("firmaelectronica.FirmaElectronica");
-    Method main = cli.getMethod("main", String[].class);
-    String[] args = new String[]{
-      tempXml.toString(),
-      p12Path,
-      password,
-      tempOut.toString()
-    };
-    main.invoke(null, (Object) args);
+    // 4) Comando para lanzar Java 8
+    String java8 = findJava8();  
+    List<String> cmd = new ArrayList<>();
+    cmd.add(java8);
+    cmd.add("-Dfile.encoding=UTF-8");
+    cmd.add("-cp");
+    cmd.add(cp);
+    // La clase principal dentro de ese JAR (fqn) – ajusta si usas otro paquete.
+    cmd.add("firmaelectronica.FirmaElectronica");
+    cmd.add(tempXml.toString());
+    cmd.add(p12Path);
+    cmd.add(password);
+    cmd.add(tempOut.toString());
+
+    ProcessBuilder pb = new ProcessBuilder(cmd).inheritIO();
+    Process p = pb.start();
+    if (p.waitFor() != 0) {
+      throw new RuntimeException("Error al invocar la herramienta de firma");
+    }
 
     // 5) Leer resultado
     byte[] signed = Files.readAllBytes(tempOut);
@@ -61,5 +69,11 @@ public class Xades {
     return null;
   }
 
-
+  private String findJava8() {
+    String java8Path = "/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java";
+    if (new File(java8Path).canExecute()) {
+      return java8Path;
+    }
+    return "java";
+  }
 }

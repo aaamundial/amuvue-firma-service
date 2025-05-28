@@ -1,20 +1,14 @@
-# Usa JDK 17 para Spring Boot
+# Dockerfile
 FROM eclipse-temurin:17-jdk-jammy
-
-# Instala solo el runtime de Java 8 (bastará para firmar)
-RUN apt-get update && \
-    apt-get install -y openjdk-8-jre-headless && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openjdk-8-jre-headless && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copia tu fat-jar de Spring Boot 3.x
+# Copiamos el fat-jar de Spring Boot
 COPY target/firma-service-0.1.0.jar app.jar
 
-# Puerto de Cloud Run (documentativo)
+# Y copiamos tu JAR de firma para que esté disponible en tiempo de ejecución
+COPY libs/FirmaElectronica.jar FirmaElectronica.jar
+
 EXPOSE 8080
-
-# Arranca Spring Boot con Java 17 (escucha en $PORT),
-# y la clase Xades invocará más abajo explicitamente el binario de Java 8
 ENTRYPOINT ["bash","-c","java -Dserver.port=${PORT:-8080} -Dfile.encoding=UTF-8 -jar app.jar"]
-

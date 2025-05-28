@@ -2,17 +2,19 @@ package com.aaamundial.xades;
 
 import java.io.*;
 import java.nio.file.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class Xades {
-  /**  
+  /**
    * Envía al proceso externo tu herramienta de firma (por ejemplo otro JAR)
    * y devuelve el XML firmado como bytes.
    */
   public byte[] sign(String xmlContent, String p12Path, String password) throws Exception {
     // crea archivos temporales
     Path tempXml = Files.createTempFile("in", ".xml");
-    Files.writeString(tempXml, xmlContent, StandardCharsets.UTF_8);
+    // Java 8: escribe bytes en lugar de writeString
+    Files.write(tempXml, xmlContent.getBytes(StandardCharsets.UTF_8));
 
     Path tempOut = Files.createTempFile("out", ".xml");
 
@@ -21,14 +23,13 @@ public class Xades {
     cmd.add("java");
     cmd.add("-Dfile.encoding=UTF-8");
     cmd.add("-jar");
-    cmd.add("TuHerramientaFirma.jar");       // el JAR real que hace la firma
+    cmd.add("TuHerramientaFirma.jar");  // sustituye por el nombre real de tu JAR
     cmd.add(tempXml.toString());
     cmd.add(p12Path);
     cmd.add(password);
     cmd.add(tempOut.toString());
 
-    ProcessBuilder pb = new ProcessBuilder(cmd);
-    pb.inheritIO();
+    ProcessBuilder pb = new ProcessBuilder(cmd).inheritIO();
     Process p = pb.start();
     if (p.waitFor() != 0) {
       throw new RuntimeException("Error al invocar la herramienta de firma");
@@ -39,4 +40,6 @@ public class Xades {
     Files.deleteIfExists(tempOut);
     return signed;
   }
+
+  // ... si tienes findJar() y findJava(), añádelas abajo ...
 }

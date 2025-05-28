@@ -14,15 +14,13 @@ public class Xades {
    * y devuelve el XML firmado como bytes.
    */
   public byte[] sign(String xmlContent, String p12Path, String password) throws Exception {
-    // escribe el XML de entrada en un fichero temporal
     Path tempXml = Files.createTempFile("in", ".xml");
     Files.write(tempXml, xmlContent.getBytes(StandardCharsets.UTF_8));
 
     Path tempOut = Files.createTempFile("out", ".xml");
 
-    // construye el comando usando Java 8 para la firma
     String java8 = findJava8();
-    String jar = findJar("TuHerramientaFirma.jar");  // ajusta el nombre real
+    String jar = findJar("TuHerramientaFirma.jar");
     if (jar == null) {
       throw new IllegalStateException("No se encontró el JAR de firma");
     }
@@ -50,30 +48,35 @@ public class Xades {
   }
 
   /**
-   * Busca el JAR de firma en el working directory o subdirectorios.
+   * Busca el JAR de firma en el working directory y subdirectorios.
    */
   private String findJar(String jarName) {
-    for (var root : new File(".").listFiles(File::isDirectory)) {
-      for (var file : root.listFiles()) {
-        if (file.getName().equals(jarName)) {
-          return file.getAbsolutePath();
+    File base = new File(".");
+    File[] roots = base.listFiles(File::isDirectory);
+    if (roots != null) {
+      for (File root : roots) {
+        File[] files = root.listFiles();
+        if (files != null) {
+          for (File file : files) {
+            if (file.getName().equals(jarName)) {
+              return file.getAbsolutePath();
+            }
+          }
         }
       }
     }
-    // o bien lo buscas en otra carpeta fija...
     return null;
   }
 
   /**
    * Devuelve la ruta al binario de Java 8 si existe en Debian/Ubuntu,
-   * si no, devuelve "java" (que será Java 17 para Spring Boot).
+   * si no, devuelve "java" (el runtime por defecto, Java 17 para Spring Boot).
    */
   private String findJava8() {
     String java8Path = "/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java";
     if (new File(java8Path).canExecute()) {
       return java8Path;
     }
-    // fallback al java por defecto (17+)
     return "java";
   }
 }

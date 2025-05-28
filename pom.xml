@@ -41,26 +41,25 @@
     <plugins>
       <!-- 1) Instalar FirmaElectronica.jar antes de compilar -->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-install-plugin</artifactId>
-        <version>3.0.0-M1</version>
-        <executions>
-          <execution>
-            <id>install-firma</id>
-            <phase>initialize</phase>
-            <goals>
-              <goal>install-file</goal>
-            </goals>
-            <configuration>
-              <file>${project.basedir}/libs/FirmaElectronica.jar</file>
-              <groupId>com.aaamundial</groupId>
-              <artifactId>FirmaElectronica</artifactId>
-              <version>1.0.0</version>
-              <packaging>jar</packaging>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-shade-plugin</artifactId>
+      <version>3.2.4</version>
+      <executions>
+        <execution>
+          <phase>package</phase>
+          <goals>
+            <goal>shade</goal>
+          </goals>
+          <configuration>
+            <!-- no queremos un POM reducido, solo el JAR grande -->
+            <createDependencyReducedPom>false</createDependencyReducedPom>
+            <!-- adjunta el artifact sombreado con sufijo "-all" -->
+            <shadedArtifactAttached>true</shadedArtifactAttached>
+            <shadedClassifierName>all</shadedClassifierName>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
 
       <!-- 2) Compilador de Java (usa las propiedades definidas arriba) -->
       <plugin>

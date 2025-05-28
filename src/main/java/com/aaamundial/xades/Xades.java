@@ -10,22 +10,32 @@ import java.util.List;
 public class Xades {
 
   public byte[] sign(String xmlContent, String p12Path, String password) throws Exception {
+    // 1) Temp files
     Path tempXml = Files.createTempFile("in", ".xml");
     Files.write(tempXml, xmlContent.getBytes(StandardCharsets.UTF_8));
     Path tempOut = Files.createTempFile("out", ".xml");
 
-    String java8 = findJava8();
-    // Nombre real del JAR que copiaste en Dockerfile
+    // 2) Encuentra el JAR principal
     String jar = findJar("FirmaElectronica.jar");
     if (jar == null) {
       throw new IllegalStateException("No se encontró el JAR de firma");
     }
 
+    // 3) Construye el classpath: JAR principal + todas las deps en lib/
+    File jarFile = new File(jar);
+    String parent = jarFile.getParent(); // debería ser ".../app/libs"
+    // En Java >=6 el wildcard en classpath funciona: dir/* incluye todos los jars
+    String cp = jar + File.pathSeparator + parent + "/lib/*";
+
+    // 4) Comando para lanzar Java 8
+    String java8 = findJava8();  
     List<String> cmd = new ArrayList<>();
     cmd.add(java8);
     cmd.add("-Dfile.encoding=UTF-8");
-    cmd.add("-jar");
-    cmd.add(jar);
+    cmd.add("-cp");
+    cmd.add(cp);
+    // La clase principal dentro de ese JAR (fqn) – ajusta si usas otro paquete.
+    cmd.add("firmaelectronica.FirmaElectronica");
     cmd.add(tempXml.toString());
     cmd.add(p12Path);
     cmd.add(password);
@@ -37,6 +47,7 @@ public class Xades {
       throw new RuntimeException("Error al invocar la herramienta de firma");
     }
 
+    // 5) Leer resultado
     byte[] signed = Files.readAllBytes(tempOut);
     Files.deleteIfExists(tempXml);
     Files.deleteIfExists(tempOut);
@@ -44,27 +55,13 @@ public class Xades {
   }
 
   private String findJar(String jarName) {
-    File base = new File(".");
-    // 1) Busca en el directorio base
-    File[] files = base.listFiles();
+    // Busca en ./libs (directorio copiado)
+    File libs = new File("libs");
+    File[] files = libs.listFiles();
     if (files != null) {
       for (File f : files) {
         if (f.isFile() && f.getName().equals(jarName)) {
           return f.getAbsolutePath();
-        }
-      }
-    }
-    // 2) Luego busca en subdirectorios
-    File[] dirs = base.listFiles(File::isDirectory);
-    if (dirs != null) {
-      for (File dir : dirs) {
-        File[] nested = dir.listFiles();
-        if (nested != null) {
-          for (File f : nested) {
-            if (f.isFile() && f.getName().equals(jarName)) {
-              return f.getAbsolutePath();
-            }
-          }
         }
       }
     }

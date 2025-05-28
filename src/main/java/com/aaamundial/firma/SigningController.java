@@ -20,18 +20,13 @@ public class SigningController {
     byte[] xml = xmlFile.getBytes();
     byte[] p12 = p12File.getBytes();
 
-    // guarda el P12 en un temp file para la librería Xades
-    java.nio.file.Path tempP12 = java.nio.file.Files.createTempFile("firma", ".p12");
-    java.nio.file.Files.write(tempP12, p12);
-
-    // Invoca tu clase Xades del JAR
+    // Firma in-process: pasamos bytes directamente
     com.aaamundial.xades.Xades xades = new com.aaamundial.xades.Xades();
-    byte[] signed = xades.sign(new String(xml, "UTF-8"),
-                               tempP12.toString(),
-                               pwd);
-
-    // limpia
-    java.nio.file.Files.delete(tempP12);
+    byte[] signed = xades.sign(
+      new String(xml, StandardCharsets.UTF_8),
+      null, // p12Path ya no se usa internamente
+      pwd
+    );
 
     return ResponseEntity.ok()
         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)

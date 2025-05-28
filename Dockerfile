@@ -1,5 +1,5 @@
 # Usa un JDK ligero
-FROM eclipse-temurin:17-jdk-jammy
+FROM eclipse-temurin:8-jdk-jammy
 
 WORKDIR /app
 

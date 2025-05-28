@@ -9,17 +9,13 @@ import java.util.List;
 
 public class Xades {
 
-  /**
-   * Envía al proceso externo tu herramienta de firma (por ejemplo otro JAR)
-   * y devuelve el XML firmado como bytes.
-   */
   public byte[] sign(String xmlContent, String p12Path, String password) throws Exception {
     Path tempXml = Files.createTempFile("in", ".xml");
     Files.write(tempXml, xmlContent.getBytes(StandardCharsets.UTF_8));
-
     Path tempOut = Files.createTempFile("out", ".xml");
 
     String java8 = findJava8();
+    // Nombre real del JAR que copiaste en Dockerfile
     String jar = findJar("FirmaElectronica.jar");
     if (jar == null) {
       throw new IllegalStateException("No se encontró el JAR de firma");
@@ -47,19 +43,26 @@ public class Xades {
     return signed;
   }
 
-  /**
-   * Busca el JAR de firma en el working directory y subdirectorios.
-   */
   private String findJar(String jarName) {
     File base = new File(".");
-    File[] roots = base.listFiles(File::isDirectory);
-    if (roots != null) {
-      for (File root : roots) {
-        File[] files = root.listFiles();
-        if (files != null) {
-          for (File file : files) {
-            if (file.getName().equals(jarName)) {
-              return file.getAbsolutePath();
+    // 1) Busca en el directorio base
+    File[] files = base.listFiles();
+    if (files != null) {
+      for (File f : files) {
+        if (f.isFile() && f.getName().equals(jarName)) {
+          return f.getAbsolutePath();
+        }
+      }
+    }
+    // 2) Luego busca en subdirectorios
+    File[] dirs = base.listFiles(File::isDirectory);
+    if (dirs != null) {
+      for (File dir : dirs) {
+        File[] nested = dir.listFiles();
+        if (nested != null) {
+          for (File f : nested) {
+            if (f.isFile() && f.getName().equals(jarName)) {
+              return f.getAbsolutePath();
             }
           }
         }
@@ -68,10 +71,6 @@ public class Xades {
     return null;
   }
 
-  /**
-   * Devuelve la ruta al binario de Java 8 si existe en Debian/Ubuntu,
-   * si no, devuelve "java" (el runtime por defecto, Java 17 para Spring Boot).
-   */
   private String findJava8() {
     String java8Path = "/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java";
     if (new File(java8Path).canExecute()) {

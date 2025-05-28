@@ -20,7 +20,7 @@ public class Xades {
     Path tempOut = Files.createTempFile("out", ".xml");
 
     String java8 = findJava8();
-    String jar = findJar("TuHerramientaFirma.jar");
+    String jar = findJar("FirmaElectronica.jar");
     if (jar == null) {
       throw new IllegalStateException("No se encontró el JAR de firma");
     }

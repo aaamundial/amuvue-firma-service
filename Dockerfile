@@ -17,4 +17,4 @@ COPY libs ./libs
 EXPOSE 8080
 
 # Arranca Spring Boot en Java 17 escuchando en $PORT
-ENTRYPOINT ["bash","-c","java -Dserver.port=${PORT:-8080} -Dfile.encoding=UTF-8 -jar app.jar"]
+ENTRYPOINT ["bash","-c","java -Dloader.path=libs/,libs/lib/ -Dserver.port=${PORT:-8080} -Dfile.encoding=UTF-8 -jar app.jar"]

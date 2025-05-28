@@ -1,4 +1,13 @@
 steps:
+  - name: 'gcr.io/cloud-builders/mvn'
+    args: [
+      'install:install-file',
+      "-Dfile=libs/FirmaElectronica.jar",
+      "-DgroupId=com.aaamundial",
+      "-DartifactId=FirmaElectronica",
+      "-Dversion=1.0.0",
+      "-Dpackaging=jar"
+    ]
   # 1) Empaquetar con Maven
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['clean','package','-DskipTests']

@@ -1,13 +1,20 @@
-# Usa un JDK ligero
-FROM eclipse-temurin:8-jdk-jammy
+# Usa JDK 17 para Spring Boot
+FROM eclipse-temurin:17-jdk-jammy
+
+# Instala solo el runtime de Java 8 (bastará para firmar)
+RUN apt-get update && \
+    apt-get install -y openjdk-8-jre-headless && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copia el fat-jar
+# Copia tu fat-jar de Spring Boot 3.x
 COPY target/firma-service-0.1.0.jar app.jar
 
-# Puerto expuesto (no estrictamente necesario, pero sirve de documentación)
+# Puerto de Cloud Run (documentativo)
 EXPOSE 8080
 
-# Arranca el servicio en el puerto que Cloud Run inyecta en $PORT
+# Arranca Spring Boot con Java 17 (escucha en $PORT),
+# y la clase Xades invocará más abajo explicitamente el binario de Java 8
 ENTRYPOINT ["bash","-c","java -Dserver.port=${PORT:-8080} -Dfile.encoding=UTF-8 -jar app.jar"]
+

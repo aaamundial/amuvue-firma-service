@@ -6,7 +6,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.nio.charset.StandardCharsets;
 
 @RestController
 public class SigningController {
@@ -25,13 +24,11 @@ public class SigningController {
     java.nio.file.Path tempP12 = java.nio.file.Files.createTempFile("firma", ".p12");
     java.nio.file.Files.write(tempP12, p12);
 
-    // Firma in-process (sin nuevo proceso JVM)
+    // Invoca tu clase Xades del JAR
     com.aaamundial.xades.Xades xades = new com.aaamundial.xades.Xades();
-    byte[] signed = xades.sign(
-      new String(xml, StandardCharsets.UTF_8),
-      tempP12.toString(),
-      pwd
-    );
+    byte[] signed = xades.sign(new String(xml, "UTF-8"),
+                               tempP12.toString(),
+                               pwd);
 
     // limpia
     java.nio.file.Files.delete(tempP12);

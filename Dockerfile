@@ -1,4 +1,4 @@
-# Usa JDK 17 para Spring Boot
+# Dockerfila
 FROM eclipse-temurin:17-jdk-jammy
 
 # Instala sólo el runtime de Java 8 para la firma

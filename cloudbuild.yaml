@@ -31,6 +31,7 @@ steps:
       - --allow-unauthenticated
       - --memory=512Mi
       - --timeout=30s
+      - --min-instances=1
 
 # Para notificar la imagen resultante
 images:

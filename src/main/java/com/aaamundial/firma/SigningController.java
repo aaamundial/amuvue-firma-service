@@ -1,30 +1,48 @@
-//C:\amuvue-firma-service\src\main\java\com\aaamundial\firma\SigningController.java
 package com.aaamundial.firma;
 
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import com.aaamundial.firma.XadesSignerService;
+
+// DTO (Data Transfer Object) para el request JSON
+record SignRequest(String xmlContent, String uid, String empresaId) {}
+
 @RestController
 public class SigningController {
 
-  @PostMapping(path = "/sign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public ResponseEntity<byte[]> sign(
-      @RequestPart("xml") MultipartFile xmlFile,
-      @RequestPart("p12") MultipartFile p12File,
-      @RequestParam("password") String pwd
-  ) throws Exception {
+    private final CertificateProvider certificateProvider;
 
-    byte[] xml = xmlFile.getBytes();
-    byte[] p12 = p12File.getBytes();
+    // Inyecta el proveedor de certificados vía constructor
+    public SigningController(CertificateProvider certificateProvider) {
+        this.certificateProvider = certificateProvider;
+    }
+    
+    @PostMapping(path = "/sign", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<byte[]> sign(@RequestBody SignRequest request) {
+        try {
+            // Validar que los datos necesarios llegaron
+            if (request.uid() == null || request.uid().isBlank() ||
+                request.empresaId() == null || request.empresaId().isBlank()) {
+                return ResponseEntity.badRequest().body("uid y empresaId son obligatorios".getBytes());
+            }
 
-    XadesSignerService signer = new XadesSignerService();
-    byte[] signed = signer.sign(xml, p12, pwd);
+            // Obtener los datos del certificado usando el proveedor
+            CertificateData certData = certificateProvider.getCertificate(request.uid(), request.empresaId());
 
-    return ResponseEntity.ok()
-        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
-        .body(signed);
-  }
+            // Firmar el XML
+            XadesSignerService signer = new XadesSignerService();
+            byte[] signed = signer.sign(request.xmlContent().getBytes("UTF-8"), certData);
+
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_XML)
+                .body(signed);
+
+        } catch (Exception e) {
+            e.printStackTrace(); // Loguear el error es vital para depuración
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(e.getMessage().getBytes());
+        }
+    }
 }

@@ -22,7 +22,11 @@ import java.util.Enumeration;
 
 public class XadesSignerService {
 
-    public byte[] sign(byte[] xmlBytes, byte[] p12Bytes, String pwd) throws Exception {
+    public byte[] sign(byte[] xmlBytes, CertificateData certData) throws Exception {
+
+        // <<< CAMBIO: Obtenemos los bytes y la contraseña del objeto recibido
+        byte[] p12Bytes = certData.p12Bytes();
+        String pwd = certData.password();
 
         /* ---------- 1) Certificado y clave del PKCS#12 ---------- */
         KeyStore ks = KeyStore.getInstance("PKCS12");

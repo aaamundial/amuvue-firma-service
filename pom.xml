@@ -37,6 +37,28 @@
         <version>2.4.0</version>
     </dependency>
 
+    <!-- <<< AÑADIR: Para conectar a Firebase/Firestore >>> -->
+    <dependency>
+        <groupId>com.google.firebase</groupId>
+        <artifactId>firebase-admin</artifactId>
+        <version>9.2.0</version>
+    </dependency>
+
+    <!-- <<< AÑADIR: Para descargar archivos de Google Cloud Storage >>> -->
+    <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-storage</artifactId>
+        <!-- La versión se gestiona a través de la BOM de GCP si se usa, si no, especificar -->
+    </dependency>
+    
+    <!-- <<< AÑADIR: Para una caché eficiente (muy recomendado) >>> -->
+    <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>32.1.2-jre</version>
+    </dependency>
+
+
 
   </dependencies>
 

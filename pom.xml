@@ -30,21 +30,19 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!-- XAdES-BES con SHA-256 -->
+    <!-- XAdES 2.4.0 (trae xmlsec-4.0.2 y bcprov-1.78.1 como transitivas) -->
     <dependency>
-      <groupId>com.googlecode.xades4j</groupId>
-      <artifactId>xades4j</artifactId>
-      <version>1.6.1</version>
+        <groupId>com.googlecode.xades4j</groupId>
+        <artifactId>xades4j</artifactId>
+        <version>2.4.0</version>
     </dependency>
+
+    <!-- Solo deja bcprov explícito si quieres fijar versión;
+         xmlsec ya lo arrastra la propia lib -->
     <dependency>
-      <groupId>org.apache.santuario</groupId>
-      <artifactId>xmlsec</artifactId>
-      <version>3.0.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcprov-jdk18on</artifactId>
-      <version>1.78</version>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk18on</artifactId>
+        <version>1.78.1</version>
     </dependency>
 
   </dependencies>

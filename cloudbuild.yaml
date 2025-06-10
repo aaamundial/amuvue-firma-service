@@ -3,15 +3,7 @@
 steps:
   # 1) Instala FirmaElectronica.jar y empaqueta tu servicio en un solo comando
   - name: 'gcr.io/cloud-builders/mvn'
-    args:
-      - install:install-file
-      - "-Dfile=libs/FirmaElectronica.jar"
-      - "-DgroupId=com.aaamundial"
-      - "-DartifactId=FirmaElectronica"
-      - "-Dversion=1.0.0"
-      - "-Dpackaging=jar"
-      - package
-      - -DskipTests
+    args: ['package','-DskipTests']
 
   # 2) Construye la imagen Docker
   - name: 'gcr.io/cloud-builders/docker'

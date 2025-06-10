@@ -19,8 +19,8 @@
   <packaging>jar</packaging>
 
   <properties>
-    <!-- Nivel de Java para compilar -->
-    <java.version>8</java.version>
+    <!-- Compilamos con Java 17 porque Spring Boot 3 ya lo requiere -->
+    <java.version>17</java.version>
   </properties>
 
   <dependencies>
@@ -30,37 +30,29 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!-- Tu JAR local -->
+    <!-- XAdES-BES con SHA-256 -->
     <dependency>
-      <groupId>com.aaamundial</groupId>
-      <artifactId>FirmaElectronica</artifactId>
-      <version>1.0.0</version>
+      <groupId>org.ietf.tools</groupId>
+      <artifactId>xades4j</artifactId>
+      <version>2.1.1</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.santuario</groupId>
+      <artifactId>xmlsec</artifactId>
+      <version>3.0.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>1.78</version>
+    </dependency>
+
   </dependencies>
 
   <build>
     <plugins>
       <!-- 1) Instalar FirmaElectronica.jar antes de compilar -->
-      <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-shade-plugin</artifactId>
-      <version>3.2.4</version>
-      <executions>
-        <execution>
-          <phase>package</phase>
-          <goals>
-            <goal>shade</goal>
-          </goals>
-          <configuration>
-            <!-- no queremos un POM reducido, solo el JAR grande -->
-            <createDependencyReducedPom>false</createDependencyReducedPom>
-            <!-- adjunta el artifact sombreado con sufijo "-all" -->
-            <shadedArtifactAttached>true</shadedArtifactAttached>
-            <shadedClassifierName>all</shadedClassifierName>
-          </configuration>
-        </execution>
-      </executions>
-    </plugin>
+      
 
       <!-- 2) Compilador de Java (usa las propiedades definidas arriba) -->
       <plugin>

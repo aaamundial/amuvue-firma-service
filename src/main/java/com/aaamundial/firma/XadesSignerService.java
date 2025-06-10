@@ -4,8 +4,9 @@ package com.aaamundial.firma;
 import xades4j.production.*;
 import xades4j.providers.impl.DirectKeyingDataProvider;
 import xades4j.properties.DataObjectFormatProperty;
-// ¡ESTA ES LA LÍNEA CORREGIDA!
 import xades4j.algorithms.EnvelopedSignatureTransform;
+// ¡IMPORTAMOS LA CLASE QUE VAMOS A USAR AHORA!
+import xades4j.properties.DataObjectDesc;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -31,22 +32,21 @@ public class XadesSignerService {
 
         /* ---------- 2) Perfil XAdES ---------- */
         DirectKeyingDataProvider kdp = new DirectKeyingDataProvider(cert, key);
-        XadesSigner signer = new XadesBesSigningProfile(kdp).newSigner(); // por defecto RSA-SHA256
+        XadesSigner signer = new XadesBesSigningProfile(kdp).newSigner();
 
         /* ---------- 3) DOM del XML ---------- */
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        // Importante: Habilitar namespaces para que XAdES funcione correctamente
         dbf.setNamespaceAware(true); 
         Document doc = dbf.newDocumentBuilder()
                 .parse(new java.io.ByteArrayInputStream(xmlBytes));
 
         /* ---------- 4) Objeto firmado (enveloped) ---------- */
-        // El resto del código que usa "new EnvelopedSignatureTransform()" ya es correcto
-        // porque ahora el import apunta a la clase correcta.
-        DataObjectReference obj = new DataObjectReference("")
+        // AQUÍ ESTÁ LA CORRECCIÓN: La variable 'obj' ahora es del tipo correcto 'DataObjectDesc'
+        DataObjectDesc obj = new DataObjectReference("")
                 .withTransform(new EnvelopedSignatureTransform())
                 .withDataObjectFormat(new DataObjectFormatProperty("text/xml"));
-
+        
+        // El constructor de SignedDataObjects puede aceptar un DataObjectDesc
         SignedDataObjects signedDataObjects = new SignedDataObjects(obj);
         
         signer.sign(signedDataObjects, doc.getDocumentElement());
@@ -59,7 +59,7 @@ public class XadesSignerService {
     private static byte[] toBytes(Document doc) throws TransformerException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Transformer tf = TransformerFactory.newInstance().newTransformer();
-        tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8"); // Asegurar UTF-8
+        tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         tf.transform(new DOMSource(doc), new StreamResult(out));
         return out.toByteArray();
     }

@@ -37,13 +37,6 @@
         <version>2.4.0</version>
     </dependency>
 
-    <!-- Solo deja bcprov explícito si quieres fijar versión;
-         xmlsec ya lo arrastra la propia lib -->
-    <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcprov-jdk18on</artifactId>
-        <version>1.78.1</version>
-    </dependency>
 
   </dependencies>
 

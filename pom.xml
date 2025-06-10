@@ -21,8 +21,22 @@
   <properties>
     <!-- Compilamos con Java 17 porque Spring Boot 3 ya lo requiere -->
     <java.version>17</java.version>
+    <gcp.libraries.bom.version>26.32.0</gcp.libraries.bom.version>
   </properties>
 
+ <!-- <<< AÑADIR/MODIFICAR: La sección dependencyManagement >>> -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>libraries-bom</artifactId>
+        <version>${gcp.libraries.bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  
   <dependencies>
     <!-- Dependencia Spring Boot Web (no necesitas versión si heredas del parent) -->
     <dependency>

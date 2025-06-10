@@ -1,11 +1,11 @@
-//C:\amuvue-firma-service\src\main\java\com\aaamundial\firma\SigningController.java
-
+// Archivo: src/main/java/com/aaamundial/firma/XadesSignerService.java
 package com.aaamundial.firma;
 
 import xades4j.production.*;
 import xades4j.providers.impl.DirectKeyingDataProvider;
 import xades4j.properties.DataObjectFormatProperty;
-import xades4j.transform.EnvelopedSignatureTransform;
+// ¡ESTA ES LA LÍNEA CORREGIDA!
+import xades4j.algorithms.EnvelopedSignatureTransform;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -34,16 +34,22 @@ public class XadesSignerService {
         XadesSigner signer = new XadesBesSigningProfile(kdp).newSigner(); // por defecto RSA-SHA256
 
         /* ---------- 3) DOM del XML ---------- */
-        Document doc = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder()
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        // Importante: Habilitar namespaces para que XAdES funcione correctamente
+        dbf.setNamespaceAware(true); 
+        Document doc = dbf.newDocumentBuilder()
                 .parse(new java.io.ByteArrayInputStream(xmlBytes));
 
         /* ---------- 4) Objeto firmado (enveloped) ---------- */
-        DataObjectReference obj = new DataObjectReference("")                               // '' = documento raíz
+        // El resto del código que usa "new EnvelopedSignatureTransform()" ya es correcto
+        // porque ahora el import apunta a la clase correcta.
+        DataObjectReference obj = new DataObjectReference("")
                 .withTransform(new EnvelopedSignatureTransform())
                 .withDataObjectFormat(new DataObjectFormatProperty("text/xml"));
 
-        signer.sign(new SignedDataObjects(obj), doc.getDocumentElement());
+        SignedDataObjects signedDataObjects = new SignedDataObjects(obj);
+        
+        signer.sign(signedDataObjects, doc.getDocumentElement());
 
         /* ---------- 5) DOM → bytes ---------- */
         return toBytes(doc);
@@ -53,6 +59,7 @@ public class XadesSignerService {
     private static byte[] toBytes(Document doc) throws TransformerException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Transformer tf = TransformerFactory.newInstance().newTransformer();
+        tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8"); // Asegurar UTF-8
         tf.transform(new DOMSource(doc), new StreamResult(out));
         return out.toByteArray();
     }

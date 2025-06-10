@@ -9,7 +9,7 @@ import xades4j.properties.DataObjectDesc;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+// Se elimina import org.w3c.dom.NodeList; porque no se usa
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.*;
@@ -46,8 +46,9 @@ public class XadesSignerService {
         PrivateKey key = (PrivateKey) ks.getKey(signingAlias, pwd.toCharArray());
 
         /* ---------- 2) Perfil XAdES ---------- */
-        // Para el SRI, a menudo se requiere RSA-SHA1, aunque SHA256 es más moderno y seguro.
-        // Si SHA256 falla, prueba cambiando a XadesBesSigningProfile.SHA1_RSA
+        // AQUÍ ESTÁ LA LÍNEA QUE FALTABA
+        DirectKeyingDataProvider kdp = new DirectKeyingDataProvider(cert, key);
+        
         XadesBesSigningProfile profile = new XadesBesSigningProfile(kdp);
         XadesSigner signer = profile.newSigner();
 
@@ -57,16 +58,16 @@ public class XadesSignerService {
         Document doc = dbf.newDocumentBuilder()
                 .parse(new java.io.ByteArrayInputStream(xmlBytes));
         
-        // Es crucial que el elemento raíz a firmar tenga el atributo 'Id' (no 'id' en minúsculas)
-        // en el DOM para que la referencia funcione.
         Element rootElem = doc.getDocumentElement();
+        // Es crucial que el elemento raíz a firmar tenga el atributo 'id' (no 'Id' en mayúsculas)
+        // en el DOM para que la referencia funcione.
         rootElem.setIdAttribute("id", true);
 
         /* ---------- 4) Objeto firmado (enveloped) ---------- */
         // La referencia DEBE apuntar al ID del nodo 'comprobante'
         DataObjectDesc obj = new DataObjectReference("#comprobante")
                 .withTransform(new EnvelopedSignatureTransform())
-                .withDataObjectFormat(new DataObjectFormatProperty("text/xml", "UTF-8")); // Especificar codificación
+                .withDataObjectFormat(new DataObjectFormatProperty("text/xml", "UTF-8"));
         
         SignedDataObjects signedDataObjects = new SignedDataObjects(obj);
         
@@ -82,8 +83,7 @@ public class XadesSignerService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Transformer tf = TransformerFactory.newInstance().newTransformer();
         tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        // Opcional: para que el XML de salida no tenga la declaración <?xml ...?>
-        // tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); // Para que coincida con el XML de ejemplo
         tf.transform(new DOMSource(doc), new StreamResult(out));
         return out.toByteArray();
     }

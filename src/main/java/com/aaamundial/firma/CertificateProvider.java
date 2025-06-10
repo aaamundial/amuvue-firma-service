@@ -82,12 +82,12 @@ public class CertificateProvider {
             throw new RuntimeException("p12_gcs_path o password no encontrados en Firestore para la empresa: " + empresaId);
         }
 
-        String[] parts = p12GcsPath.split("/", 2);
-        if (parts.length < 2) {
-             throw new RuntimeException("Formato de p12_gcs_path inválido: " + p12GcsPath);
-        }
-        String bucketName = parts[0];
-        String objectName = parts[1];
+
+        // Definimos el nombre del bucket de forma fija.
+        final String bucketName = "amuoctubre_cloudbuild";
+        
+        // La ruta del objeto es la cadena completa que viene de Firestore.
+        final String objectName = p12GcsPath; 
 
         BlobId blobId = BlobId.of(bucketName, objectName);
         byte[] p12Bytes = storage.readAllBytes(blobId);

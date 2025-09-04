@@ -109,7 +109,7 @@ public class CertificateProvider {
         
         // Si no existe el campo, usar la fecha de modificación del documento
         if (document.getUpdateTime() != null) {
-            return document.getUpdateTime().toEpochSecond();
+            return document.getUpdateTime().getSeconds()
         }
         
         return 0L;

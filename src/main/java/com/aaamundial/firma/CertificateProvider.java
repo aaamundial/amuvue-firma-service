@@ -14,6 +14,10 @@ import com.google.common.cache.LoadingCache;
 import com.google.firebase.FirebaseApp;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
+import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -27,6 +31,9 @@ public class CertificateProvider {
     private final Storage storage;
     private final Firestore db;
     private final LoadingCache<CertificateIdentifier, CertificateData> certificateCache;
+    private final LoadingCache<CertificateIdentifier, Long> timestampCache;
+    private final Map<CertificateIdentifier, Long> localTimestampCache = new ConcurrentHashMap<>();
+
 
     // <<< CAMBIO: El constructor ahora RECIBE el bean de FirebaseApp.
     // Esto crea una dependencia explícita y soluciona el problema de orden de arranque.
@@ -48,18 +55,72 @@ public class CertificateProvider {
 
         this.certificateCache = CacheBuilder.newBuilder()
                 .maximumSize(500)
-                .expireAfterWrite(1, TimeUnit.HOURS)
+                .expireAfterWrite(24, TimeUnit.HOURS)
                 .build(new CacheLoader<>() {
                     @Override
                     public CertificateData load(CertificateIdentifier id) throws Exception {
                         return fetchCertificateFromCloud(id.uid(), id.empresaId());
                     }
                 });
+        this.timestampCache = CacheBuilder.newBuilder()
+                .maximumSize(500)
+                .expireAfterWrite(30, TimeUnit.SECONDS)  // Se verifica cada 30 segundos
+                .build(new CacheLoader<>() {
+                    @Override
+                    public Long load(CertificateIdentifier id) throws Exception {
+                        return fetchPasswordTimestamp(id.uid(), id.empresaId());
+                    }
+                });
     }
 
     // El resto de la clase no cambia...
     public CertificateData getCertificate(String uid, String empresaId) throws ExecutionException {
-        return certificateCache.get(new CertificateIdentifier(uid, empresaId));
+        CertificateIdentifier id = new CertificateIdentifier(uid, empresaId);
+        
+        // Verificar si la contraseña ha cambiado
+        Long currentTimestamp = timestampCache.get(id);
+        Long cachedTimestamp = getCachedTimestamp(id);
+        
+        if (cachedTimestamp == null || !currentTimestamp.equals(cachedTimestamp)) {
+            System.out.println("Contraseña actualizada detectada, invalidando caché para: " + empresaId);
+            certificateCache.invalidate(id);
+            setCachedTimestamp(id, currentTimestamp);
+        }
+        
+        return certificateCache.get(id);
+    }
+    
+    private Long fetchPasswordTimestamp(String uid, String empresaId) throws Exception {
+        DocumentReference docRef = db.collection("users").document(uid)
+                                     .collection("empresas").document(empresaId);
+        
+        ApiFuture<DocumentSnapshot> future = docRef.get();
+        DocumentSnapshot document = future.get();
+        
+        if (!document.exists()) {
+            return 0L;
+        }
+        
+        // Obtener el timestamp de cuando se actualizó la contraseña
+        Object timestampObj = document.get("passwordUpdatedAt");
+        if (timestampObj instanceof Number) {
+            return ((Number) timestampObj).longValue();
+        }
+        
+        // Si no existe el campo, usar la fecha de modificación del documento
+        if (document.getUpdateTime() != null) {
+            return document.getUpdateTime().toEpochSecond();
+        }
+        
+        return 0L;
+    }
+    
+    private Long getCachedTimestamp(CertificateIdentifier id) {
+        return localTimestampCache.get(id);
+    }
+    
+    private void setCachedTimestamp(CertificateIdentifier id, Long timestamp) {
+        localTimestampCache.put(id, timestamp);
     }
 
     private CertificateData fetchCertificateFromCloud(String uid, String empresaId) throws Exception {
